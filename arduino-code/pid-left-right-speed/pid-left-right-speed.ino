@@ -55,7 +55,7 @@ void setup() {
   InitializePins();
   AttachEncoderInterrupts();
   Serial.begin(115200);
-  Serial.println("Setup complete.");
+  //Serial.println("Setup complete.");
 }
 
 void loop() {
@@ -78,7 +78,7 @@ void loop() {
     PwmRight = CalculatePid(SetpointRpsRight, RpsRight, KpRight, KiRight, KdRight, IntegralRight, PrevErrorRight);
 
     // Debugging output
-    DebugMotorInfo();  // For Serial Monitor
+    //DebugMotorInfo();  // For Serial Monitor
     //PlotMotorData();   // For Arduino Plotter
 
     // Drive the motors with updated PWM values
@@ -114,15 +114,19 @@ void ParseSerialData() {
           SetpointRpsLeft = leftSpeedStr.toFloat();
           SetpointRpsRight = rightSpeedStr.toFloat();
 
-          Serial.print("Setpoint Updated - Left: ");
-          Serial.print(SetpointRpsLeft);
-          Serial.print(" RPS, Right: ");
-          Serial.println(SetpointRpsRight);
+          //Serial.print("Setpoint Updated - Left: ");
+          //Serial.print(SetpointRpsLeft);
+          //Serial.print(" RPS, Right: ");
+          //Serial.println(SetpointRpsRight);
         } else {
-          Serial.println("Error: Invalid data format.");
+          SetpointRpsLeft = 0;
+          SetpointRpsRight = 0;
+          //Serial.println("Error: Invalid data format.");
         }
       } else {
-        Serial.println("Error: Missing 'L' or 'R' in input.");
+        SetpointRpsLeft = 0;
+        SetpointRpsRight = 0;
+        //Serial.println("Error: Missing 'L' or 'R' in input.");
       }
       inputString = ""; // Clear the buffer
     } else {
