@@ -1,17 +1,24 @@
-from picamera import PiCamera
-import time
 import cv2
+import numpy as np
+from picamera2 import Picamera2
 
-#Capture image using picamera module
-camera = PiCamera()
-time.sleep(0.1)
-camera.capture('test.jpg')
+cam = Picamera2()
+height = 480
+width = 640
+middle = (int(width / 2), int(height / 2))
+cam.configure(cam.create_video_configuration(main={"format": 'RGB888', "size": (width, height)}))
 
-#Read image from MicroSD card
-image = cv2.imread('test.jpg', -1)
+cam.start()
 
-#Display image in an OpenCV window
-cv2.namedWindow('Image', cv2.WINDOW_NORMAL)
-cv2.resizeWindow('Image', 640, 480)
-cv2.imshow('Image', image)
-cv2.waitKey(0)
+while True:
+    frame = cam.capture_array()
+    # Flip the frame vertically
+    frame = cv2.flip(frame, 0)
+    
+    cv2.circle(frame, middle, 10, (255, 0, 255), -1)
+    cv2.imshow('f', frame)
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
+
+cam.stop()
+cv2.destroyAllWindows()
