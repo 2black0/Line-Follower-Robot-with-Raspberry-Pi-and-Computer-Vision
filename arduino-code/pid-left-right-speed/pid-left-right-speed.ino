@@ -48,8 +48,8 @@ const float RpsInterval = 100; // Interval for RPS calculation in milliseconds
 unsigned long LastRpsCalcTime = 0;
 
 // Target RPS for motors
-float SetpointRpsLeft = 150.0;  // Desired RPS for Left motor
-float SetpointRpsRight = 150.0; // Desired RPS for Right motor
+float SetpointRpsLeft = 0.0;  // Desired RPS for Left motor
+float SetpointRpsRight = 0.0; // Desired RPS for Right motor
 
 void setup() {
   InitializePins();
@@ -60,6 +60,11 @@ void setup() {
 
 void loop() {
   unsigned long currentTime = millis();
+
+  // Read and parse data from Raspberry Pi
+  if (Serial.available() > 0) {
+    ParseSerialData();
+  }
 
   // Calculate RPS every RpsInterval milliseconds
   if (currentTime - LastRpsCalcTime >= RpsInterval) {
@@ -79,6 +84,50 @@ void loop() {
     // Drive the motors with updated PWM values
     DriveMotor(MotorLeftPin1, MotorLeftPin2, EnableLeftPin, PwmLeft, true);
     DriveMotor(MotorRightPin1, MotorRightPin2, EnableRightPin, PwmRight, true);
+  }
+}
+
+// Parse serial data and update motor setpoints
+void ParseSerialData() {
+  static String inputString = ""; // Buffer for incoming serial data
+  char incomingChar;
+
+  while (Serial.available() > 0) {
+    incomingChar = Serial.read();
+    if (incomingChar == '\n') {
+      // Parse the received message
+      if (inputString.startsWith("L") && inputString.indexOf("R") > 0) {
+        int leftIndex = inputString.indexOf("L") + 1;
+        int rightIndex = inputString.indexOf("R") + 1;
+
+        // Ensure valid indices for parsing
+        if (rightIndex > leftIndex && rightIndex < inputString.length()) {
+          // Extract left and right speeds from the message
+          String leftSpeedStr = inputString.substring(leftIndex, inputString.indexOf("R"));
+          String rightSpeedStr = inputString.substring(rightIndex);
+
+          // Trim the extracted strings
+          leftSpeedStr.trim();
+          rightSpeedStr.trim();
+
+          // Convert to float and update setpoints
+          SetpointRpsLeft = leftSpeedStr.toFloat();
+          SetpointRpsRight = rightSpeedStr.toFloat();
+
+          Serial.print("Setpoint Updated - Left: ");
+          Serial.print(SetpointRpsLeft);
+          Serial.print(" RPS, Right: ");
+          Serial.println(SetpointRpsRight);
+        } else {
+          Serial.println("Error: Invalid data format.");
+        }
+      } else {
+        Serial.println("Error: Missing 'L' or 'R' in input.");
+      }
+      inputString = ""; // Clear the buffer
+    } else {
+      inputString += incomingChar; // Append to buffer
+    }
   }
 }
 
